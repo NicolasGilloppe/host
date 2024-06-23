@@ -86,58 +86,71 @@ def scrapp_stake(driver, home, away, url):
     if ended == True and is_table == False:
         return empty_odds
     elif ended == False and is_table == True:
-        path_dict = {'H': 0, 'D': 2, 'A': 4}
-        all_odds = []
-        for _ in table:
-            if re.match(r'^\d{1,2},\d{2}$', _.text):
-                all_odds.append(_.text)
-        odd_h, odd_d, odd_a =  all_odds[path_dict['H']], all_odds[path_dict['D']], all_odds[path_dict['A']]
-        for table in driver.find_elements(By.CSS_SELECTOR, "[class*='secondary-accordion'][class*='level-2']"):
-            if 'Total Asiatique' in table.find_element(By.CSS_SELECTOR, "[class*='header']").text:
-                l = []
-                for row in table.find_elements(By.CSS_SELECTOR, "[class*='outcome']"):
-                    bet, odd = row.text.splitlines()
-                    if bet == '1.5':
-                        l.append(odd)
-                    elif bet == '2.5':
-                        l.append(odd)
-                try:
+        try:
+            path_dict = {'H': 0, 'D': 2, 'A': 4}
+            all_odds = []
+            for _ in table:
+                if re.match(r'^\d{1,2},\d{2}$', _.text):
+                    all_odds.append(_.text)
+            odd_h, odd_d, odd_a =  all_odds[path_dict['H']], all_odds[path_dict['D']], all_odds[path_dict['A']]
+        except:
+            odd_h, odd_d, odd_a = 0, 0, 0
+        try:
+            for table in driver.find_elements(By.CSS_SELECTOR, "[class*='secondary-accordion'][class*='level-2']"):
+                if 'Total Asiatique' in table.find_element(By.CSS_SELECTOR, "[class*='header']").text:
+                    l = []
+                    for row in table.find_elements(By.CSS_SELECTOR, "[class*='outcome']"):
+                        bet, odd = row.text.splitlines()
+                        if bet == '1.5':
+                            l.append(odd)
+                        elif bet == '2.5':
+                            l.append(odd)
                     odd_o1, odd_u1, odd_o2, odd_u2 = l[0], l[2], l[4], l[6]
-                except:
-                    odd_o1, odd_u1, odd_o2, odd_u2 = 0, 0, 0, 0
-            elif 'Double chance' in table.find_element(By.CSS_SELECTOR, "[class*='header']").text:
-                for row in table.find_elements(By.CSS_SELECTOR, 'button'):
-                    if 'Match nul ou' in row.text:
-                        bet, odd_da = row.text.splitlines()
-                    elif 'ou Match nul' in row.text:
-                        bet, odd_hd = row.text.splitlines()
-            elif 'Les deux équipes qui marquent' in table.find_element(By.CSS_SELECTOR, "[class*='header']").text:
-                for row in table.find_elements(By.CSS_SELECTOR, 'button'):
-                    bet, odd = row.text.splitlines()
-                    try:
+                    break
+        except:
+            odd_o1, odd_u1, odd_o2, odd_u2 = 0, 0, 0, 0
+        try:
+            for table in driver.find_elements(By.CSS_SELECTOR, "[class*='secondary-accordion'][class*='level-2']"):
+                if 'Double chance' in table.find_element(By.CSS_SELECTOR, "[class*='header']").text:
+                    for row in table.find_elements(By.CSS_SELECTOR, 'button'):
+                        if 'Match nul ou' in row.text:
+                            bet, odd_da = row.text.splitlines()
+                        elif 'ou Match nul' in row.text:
+                            bet, odd_hd = row.text.splitlines()
+                    break
+        except:
+            odd_hd, odd_da = 0, 0
+        try:
+            for table in driver.find_elements(By.CSS_SELECTOR, "[class*='secondary-accordion'][class*='level-2']"):
+                if 'Les deux équipes qui marquent' in table.find_element(By.CSS_SELECTOR, "[class*='header']").text:
+                    for row in table.find_elements(By.CSS_SELECTOR, 'button'):
+                        bet, odd = row.text.splitlines()
                         if 'oui' in row.text:
                             odd_btts = odd
                         elif 'non' in row.text:
                             odd_nobtts = odd
-                    except:
-                        odd_btts, odd_nobtts = 0, 0
-        liste = []
-        for butt in driver.find_element(By.CLASS_NAME, 'content-wrapper.svelte-1vkrcyy').find_elements(By.CSS_SELECTOR, 'button'):
-            if butt.text == 'Spéciaux':
-                driver.execute_script("arguments[0].click();", butt)
-                time.sleep(3)
-                for ta in driver.find_elements(By.CSS_SELECTOR, "[class*='secondary-accordion'][class*='level-2']"):
-                    if '1x2 & total' in ta.find_element(By.CSS_SELECTOR, "[class*='header']").text:
-                        for row in ta.find_elements(By.CSS_SELECTOR, "[class*='outcome']"):
-                            liste.append(row.text)
-                        break
-        h, odd_ho15 = liste[2].split('\n')
-        a, odd_ao15 = liste[10].split('\n')
+        except:
+            odd_btts, odd_nobtts = 0, 0
+        try:
+            liste = []
+            for butt in driver.find_element(By.CLASS_NAME, 'content-wrapper.svelte-1vkrcyy').find_elements(By.CSS_SELECTOR, 'button'):
+                if butt.text == 'Spéciaux':
+                    driver.execute_script("arguments[0].click();", butt)
+                    time.sleep(15)
+                    for ta in driver.find_elements(By.CSS_SELECTOR, "[class*='secondary-accordion'][class*='level-2']"):
+                        if '1x2 & total' in ta.find_element(By.CSS_SELECTOR, "[class*='header']").text:
+                            for row in ta.find_elements(By.CSS_SELECTOR, "[class*='outcome']"):
+                                liste.append(row.text)
+                            break
+            h, odd_ho15 = liste[2].split('\n')
+            a, odd_ao15 = liste[10].split('\n')
+        except:
+            odd_ho15, odd_ao15 = 0,0
         dic = {'Home': odd_h, 'Draw': odd_d, 'Away': odd_a, 'HD': odd_hd, 'DA': odd_da, 'Over1': odd_o1, 'Under1': odd_u1, 'Over2': odd_o2, 'Under2': odd_u2, 'BTTS': odd_btts, 'NoBTTS': odd_nobtts, 'Ho15': odd_ho15, 'Ao15': odd_ao15}
         return dic
 
 #driver = initialize_stake()
-#print(scrapp_stake(driver, 'Fortuna Düsseldorf', 'VFL Bochum', 'https://stake.bet/fr/sports/soccer/brazil/brasileiro-serie-a/44489603-criciuma-ec-sc-botafogo-fr-rj'))
+#print(scrapp_stake(driver, 'Fortuna Düsseldorf', 'VFL Bochum', 'https://stake.bet/fr/sports/soccer/republic-of-korea/k-league-2/44422066-ansan-greeners-fc-cheonan-city-fc'))
    
 
 
