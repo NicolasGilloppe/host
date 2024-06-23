@@ -88,70 +88,89 @@ def scrapp_betclic(driver, home, away, url):
         pass
     time.sleep(2)
 
-    path_dict = {'H': 0, 'D': 1, 'A': 2}
-    numbers = []
-    for ele in driver.find_element(By.CSS_SELECTOR, 'sports-markets-single-market').text.split('\n'):
-        try:
-            a = float(ele.replace(',', '.'))
-            numbers.append(ele)
-        except:
-            pass
-    odd_h, odd_d, odd_a = numbers[path_dict['H']], numbers[path_dict['D']], numbers[path_dict['A']]
-    time.sleep(1)
-    for head in driver.find_elements(By.CSS_SELECTOR, 'sports-markets-single-market'):
-        title = head.find_element(By.CLASS_NAME, 'marketBox_head').text
-        if title == 'Nombre total de buts':
-            driver.execute_script("arguments[0].click();", head.find_element(By.CLASS_NAME, 'btn.is-medium.is-seeMore.is-tertiary'))
-            odds = head.find_element(By.CLASS_NAME, 'ng-star-inserted').text.split('\n')
-            for index, odd in enumerate(odds):
-                if odd == '+ de 1,5':
-                    odd_o1 = odds[index + 1]
-                elif odd == '- de 1,5':
-                    odd_u1 = odds[index + 1]
-                elif odd == '+ de 2,5':
-                    odd_o2 = odds[index + 1]
-                elif odd == '- de 2,5':
-                    odd_u2 =  odds[index + 1]
-        elif title == 'Double chance':
-            table = head.find_element(By.CLASS_NAME, 'ng-star-inserted').text.split('\n')
-            for index, odd in enumerate(table):
-                if odd == f'{home} ou Nul':
-                    odd_hd = table[index + 1]
-                elif odd == f'Nul ou {away}':
-                    odd_da = table[index + 1]
-        elif title == 'But pour les 2 équipes':
-            odd_btts, odd_nobtts = head.find_element(By.CLASS_NAME, 'ng-star-inserted').text.split('\n')[1], head.find_element(By.CLASS_NAME, 'ng-star-inserted').text.split('\n')[3]
-    if not odd_o2:
-        odd_o2, odd_u2 = 0, 0
-    if not odd_o1:
-        odd_o1, odd_u1 = 0, 0
-    for tab in driver.find_element(By.CLASS_NAME, 'tab.isPrimary.isHot.isScrollable.isBeginning.is-beginning').find_elements(By.CLASS_NAME, 'tab_item'):
-        if tab.text == 'Résultats':
-            driver.execute_script("arguments[0].click();", tab)
-            time.sleep(1)
-            break
-    time.sleep(2)
-    for head in driver.find_elements(By.CSS_SELECTOR, 'sports-markets-single-market'):
-        if head.find_element(By.CLASS_NAME, 'marketBox_head').text == 'Résultat & Nombre total de buts':
-            driver.execute_script("arguments[0].click();", head.find_element(By.CLASS_NAME, 'btn.is-medium.is-seeMore.is-tertiary'))
-            odds = head.find_element(By.CLASS_NAME, 'ng-star-inserted').text.split('\n')
-            for index, odd in enumerate(odds):
-                if odd == f'{home} et + de 1,5':
-                    odd_ho15 = odds[index + 1]
-                elif odd == f'{away} et + de 1,5':
-                    odd_ao15 = odds[index + 1]
-            break
-    dic = {'Home': odd_h, 'Draw': odd_d, 'Away': odd_a, 'HD': odd_hd, 'DA': odd_da, 'Over1': odd_o1, 'Under1': odd_u1, 'Over2': odd_o2, 'Under2': odd_u2, 'BTTS': odd_btts, 'NoBTTS': odd_nobtts, 'Ho15': odd_ho15, 'Ao15': odd_ao15}
     try:
-        terminate_VPN(initialize_VPN(area_input=['France']))
+        path_dict = {'H': 0, 'D': 1, 'A': 2}
+        numbers = []
+        for ele in driver.find_element(By.CSS_SELECTOR, 'sports-markets-single-market').text.split('\n'):
+            try:
+                a = float(ele.replace(',', '.'))
+                numbers.append(ele)
+            except:
+                pass
+        odd_h, odd_d, odd_a = numbers[path_dict['H']], numbers[path_dict['D']], numbers[path_dict['A']]
     except:
-        pass
+        odd_h, odd_d, odd_a = 0, 0, 0
+    
+    try:
+        time.sleep(1)
+        for head in driver.find_elements(By.CSS_SELECTOR, 'sports-markets-single-market'):
+            if head.find_element(By.CLASS_NAME, 'marketBox_head').text == 'Nombre total de buts':
+                driver.execute_script("arguments[0].click();", head.find_element(By.CLASS_NAME, 'btn.is-medium.is-seeMore.is-tertiary'))
+                odds = head.find_element(By.CLASS_NAME, 'ng-star-inserted').text.split('\n')
+                for index, odd in enumerate(odds):
+                    if odd == '+ de 1,5':
+                        odd_o1 = odds[index + 1]
+                    elif odd == '- de 1,5':
+                        odd_u1 = odds[index + 1]
+                    elif odd == '+ de 2,5':
+                        odd_o2 = odds[index + 1]
+                    elif odd == '- de 2,5':
+                        odd_u2 =  odds[index + 1]
+                break
+        if not odd_o2:
+            odd_o2, odd_u2 = 0, 0
+        if not odd_o1:
+            odd_o1, odd_u1 = 0, 0
+    except:
+        odd_o1, odd_u1, odd_o2, odd_u2 = 0, 0, 0, 0
+    
+    try:
+        for head in driver.find_elements(By.CSS_SELECTOR, 'sports-markets-single-market'):
+            if head.find_element(By.CLASS_NAME, 'marketBox_head').text == 'Double chance':
+                table = head.find_element(By.CLASS_NAME, 'ng-star-inserted').text.split('\n')
+                for index, odd in enumerate(table):
+                    if odd == f'{home} ou Nul':
+                        odd_hd = table[index + 1]
+                    elif odd == f'Nul ou {away}':
+                        odd_da = table[index + 1]
+                break
+    except:
+        odd_hd, odd_da = 0, 0
+    
+    try:
+        for head in driver.find_elements(By.CSS_SELECTOR, 'sports-markets-single-market'):
+            if head.find_element(By.CLASS_NAME, 'marketBox_head').text == 'But pour les 2 équipes':
+                odd_btts, odd_nobtts = head.find_element(By.CLASS_NAME, 'ng-star-inserted').text.split('\n')[1], head.find_element(By.CLASS_NAME, 'ng-star-inserted').text.split('\n')[3]
+    except:
+        odd_btts, odd_nobtts = 0, 0
+
+    try:
+        for tab in driver.find_element(By.CLASS_NAME, 'tab.isPrimary.isHot.isScrollable.isBeginning.is-beginning').find_elements(By.CLASS_NAME, 'tab_item'):
+            if tab.text == 'Résultats':
+                driver.execute_script("arguments[0].click();", tab)
+                time.sleep(1)
+                break
+        time.sleep(2)
+        for head in driver.find_elements(By.CSS_SELECTOR, 'sports-markets-single-market'):
+            if head.find_element(By.CLASS_NAME, 'marketBox_head').text == 'Résultat & Nombre total de buts':
+                driver.execute_script("arguments[0].click();", head.find_element(By.CLASS_NAME, 'btn.is-medium.is-seeMore.is-tertiary'))
+                odds = head.find_element(By.CLASS_NAME, 'ng-star-inserted').text.split('\n')
+                for index, odd in enumerate(odds):
+                    if odd == f'{home} et + de 1,5':
+                        odd_ho15 = odds[index + 1]
+                    elif odd == f'{away} et + de 1,5':
+                        odd_ao15 = odds[index + 1]
+                break
+    except:
+        odd_ho15, odd_ao15 = 0, 0
+
+    dic = {'Home': odd_h, 'Draw': odd_d, 'Away': odd_a, 'HD': odd_hd, 'DA': odd_da, 'Over1': odd_o1, 'Under1': odd_u1, 'Over2': odd_o2, 'Under2': odd_u2, 'BTTS': odd_btts, 'NoBTTS': odd_nobtts, 'Ho15': odd_ho15, 'Ao15': odd_ao15}
     return dic           
 
 """ driver = initialize_betclic()
 time.sleep(1)
-print(scrapp_betclic(driver, 'Criciuma SC', 'Botafogo', 'https://www.betclic.fr/football-s1/bresil-serie-a-c187/criciuma-botafogo-m3002266539'))
-driver.quit()
-close_all_chrome_instances() """
+print(scrapp_betclic(driver, 'Jeju United', 'Ulsan Hyundai', 'https://www.betclic.fr/football-s1/coree-du-sud-k-league-c3304/jeju-united-ulsan-hyundai-m3002403987'))
+driver.quit() """
+close_all_chrome_instances()
 
 
