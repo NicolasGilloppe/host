@@ -1,12 +1,12 @@
 from sqlalchemy import create_engine
 import pandas as pd
 import datetime
-from sklearn.linear_model import PoissonRegressor
-from sklearn.svm import SVR
+from sklearn.svm import SVR, SVC
 from scipy.stats import poisson
 from pymongo.mongo_client import MongoClient
 import numpy as np
-
+from sklearn.preprocessing import StandardScaler
+import time
 
 #Set up Mongo Connection
 uri = "mongodb+srv://nicolasgilloppe:s0S8eaYt0mIMdYE7@alicedb.eqrplwk.mongodb.net/?retryWrites=true&w=majority&appName=alicedb"
@@ -79,59 +79,47 @@ def both_teams_score_probability(home_lambda, away_lambda):
     return prob
 
 
-def alice(train_df, predict_df):
+def alice(train_df, predict_df, X_train, X_predict):
     # Initialize models
     model_h_svr = SVR()
     model_a_svr = SVR()
-    model_h_poiss = PoissonRegressor()
-    model_a_poiss = PoissonRegressor()
-
-    train_df = train_df.dropna()
-    predict_df = predict_df.dropna()
-    try:
-        X_train = train_df.drop(['Result', 'Over1', 'Over2', 'Ho15', 'BTTS', 'Home', 'Away', 'Pays', 'Champ', 'Time', 'Date', 'GoalA', 'GoalH'], axis=1)
-    except:
-        X_train = train_df.drop(['Date', 'Time', 'Champ', 'Home', 'Away', 'Pays', 'GoalH', 'GoalA'], axis=1)
+    model_o1 = SVC(kernel='linear', C=1.0, probability=True, random_state=42)
+    model_o2 = SVC(kernel='linear', C=1.0, probability=True, random_state=42)
 
     y_train_h = train_df['GoalH']
     y_train_a = train_df['GoalA']
+    y_train_o1 = train_df['Over1']
+    y_train_o2 = train_df['Over2']
 
     model_h_svr.fit(X_train, y_train_h)
     model_a_svr.fit(X_train, y_train_a)
-    model_h_poiss.fit(X_train, y_train_h)
-    model_a_poiss.fit(X_train, y_train_a)
 
-    try:
-        X_predict = predict_df.drop(['Home', 'Away', 'Pays', 'Champ', 'Date', 'Time', 'BTTS', 'GoalH', 'GoalA', 'Over1', 'Over2', 'Result', 'Ho15'], axis=1)
-    except:
-        X_predict = predict_df.drop(['Home', 'Away', 'Pays', 'Champ', 'Date', 'Time'], axis=1)
+    scaler = StandardScaler()
+    X_train_o = scaler.fit_transform(X_train)
+    X_predict_o = scaler.transform(X_predict)
+    print('Starting Training')
+    start = time.time()
+    model_o1.fit(X_train_o, y_train_o1)
+    model_o2.fit(X_train_o, y_train_o2)
+    end = time.time()
+    print(f'Training Completed in {end - start} seconds')
 
-    predictions_h_svr = model_h_svr.predict(X_predict)
-    predictions_a_svr = model_a_svr.predict(X_predict)
-    predictions_h_svr = np.where(predictions_h_svr < 0, 0, predictions_h_svr)
-    predictions_a_svr = np.where(predictions_a_svr < 0, 0, predictions_a_svr)
+    predictions_h_svr, predictions_a_svr  = model_h_svr.predict(X_predict), model_a_svr.predict(X_predict)
+    predictions_h_svr, predictions_a_svr = np.where(predictions_h_svr < 0, 0, predictions_h_svr), np.where(predictions_a_svr < 0, 0, predictions_a_svr)
 
-    predictions_h_poiss = model_h_poiss.predict(X_predict)
-    predictions_a_poiss = model_a_poiss.predict(X_predict)
-    predictions_h_poiss = np.where(predictions_h_poiss < 0, 0, predictions_h_poiss)
-    predictions_a_poiss = np.where(predictions_a_poiss < 0, 0, predictions_a_poiss)
+    preds_o1 = model_o1.predict_proba(X_predict_o)
+    proba_o1, proba_u1 = list([prob[0] for prob in preds_o1]), list([prob[1] for prob in preds_o1])
+    preds_o2 = model_o2.predict_proba(X_predict_o)
+    proba_o2, proba_u2 = list([prob[0] for prob in preds_o2]), list([prob[1] for prob in preds_o2])
 
-    predict_df['eGoalH'] = predictions_h_svr
-    predict_df['eGoalA'] = predictions_a_svr
+    predict_df['Proba_O1'], predict_df['Proba_U1'], predict_df['Proba_O2'], predict_df['Proba_U2'] = proba_o1, proba_u1, proba_o2, proba_u2
 
-    predict_df['eGoalH_Poiss'] = predictions_h_poiss
-    predict_df['eGoalA_Poiss'] = predictions_a_poiss
+    predict_df['eGoalH'], predict_df['eGoalA'] = predictions_h_svr, predictions_a_svr
 
     for index, row in predict_df.iterrows():
         predict_df.at[index, 'Proba_H'] = home_team_wins_probability(row['eGoalH'], row['eGoalA'])
         predict_df.at[index, 'Proba_D'] = draw_probability(row['eGoalH'], row['eGoalA'])
         predict_df.at[index, 'Proba_A'] = away_team_wins_probability(row['eGoalH'], row['eGoalA'])
-
-        predict_df.at[index, 'Proba_O1'] = more_than_2_goals_probability(row['eGoalH'], row['eGoalA'])
-        predict_df.at[index, 'Proba_U1'] = 1 - more_than_2_goals_probability(row['eGoalH_Poiss'], row['eGoalA_Poiss'])
-
-        predict_df.at[index, 'Proba_O2'] = more_than_3_goals_probability(row['eGoalH'], row['eGoalA'])
-        predict_df.at[index, 'Proba_U2'] = 1 - more_than_3_goals_probability(row['eGoalH'], row['eGoalA'])
 
         predict_df.at[index, 'Proba_BTTS'] = both_teams_score_probability(row['eGoalH'], row['eGoalA'])
         predict_df.at[index, 'Proba_NoBTTS'] = 1 - both_teams_score_probability(row['eGoalH'], row['eGoalA'])
@@ -150,97 +138,102 @@ for i in ['1', '2']:
     train = pd.read_sql('Select * From alicedb', engine).dropna()
     predict = pd.read_sql(f'Select * From matchs{i}', engine)
     if i == '2':
-        train = train[list(predict.columns) + ['GoalH', 'GoalA']]
-    print(predict)
+        train = train[list(predict.columns) + ['GoalH', 'GoalA', 'Over1', 'Over2']]
+        X_train = train.drop(['Over1', 'Over2', 'Home', 'Away', 'Pays', 'Champ', 'Time', 'Date', 'GoalA', 'GoalH'], axis=1)
+        X_predict = predict.drop(['Home', 'Away', 'Pays', 'Champ', 'Date', 'Time'], axis=1)
+    elif i == '1':
+        X_predict = predict.drop(['Home', 'Away', 'Pays', 'Champ', 'Date', 'Time', 'BTTS', 'GoalH', 'GoalA', 'Over1', 'Over2', 'Result', 'Ho15'], axis=1)
+        X_train = train.drop(['Result', 'BTTS', 'Ho15', 'Over1', 'Over2', 'Home', 'Away', 'Pays', 'Champ', 'Time', 'Date', 'GoalA', 'GoalH'], axis=1)
 
-    # Fix Columns
-    try: 
-        train = train.drop(['Index'], axis=1)
-        predict = predict.drop(['Index'], axis=1)
-    except Exception as e:
-        pass
+    if not predict.empty:
+        predicted = alice(train, predict, X_train, X_predict)
+        predicted.to_excel('Alice.xlsx')
+        print(predicted)
 
-    predicted = alice(train, predict)
-    print(predicted)
+        proba = pd.concat([proba, predicted])
 
-    proba = pd.concat([proba, predicted])
+        #Fix Check First
+        """ for index, row in predicted.iterrows():
+            pays = row['Pays']
+            value = check[check['Pays'] == pays]['Value'].values            
+            if value == 'skip':
+                predicted.drop(index, inplace=True) """
 
-    #Fix Check First
-    """ for index, row in predicted.iterrows():
-        pays = row['Pays']
-        value = check[check['Pays'] == pays]['Value'].values            
-        if value == 'skip':
-            predicted.drop(index, inplace=True) """
+        for index, row in predicted.iterrows():
+            datas = [row['Date'], row['Time'], row['Champ'], row['Home'], row['Away'], row['Pays']]
+            for bet in ['H', 'D', 'A']:
+                if row[f'Proba_{bet}'] >= 0.6:
+                    datas_result = datas.copy()
+                    datas_result.append(f'{bet}')
+                    bets.loc[len(bets)] = datas_result
+                    print(datas_result)
+            
+            if row['Total'] >= 2.6:
+                datas_o1 = datas.copy()
+                datas_o1.append('O1')
+                bets.loc[len(bets)] = datas_o1
+                print(datas_o1)
 
-    for index, row in predicted.iterrows():
-        datas = [row['Date'], row['Time'], row['Champ'], row['Home'], row['Away'], row['Pays']]
-        for bet in ['H', 'D', 'A', 'O1']:
-            if row[f'Proba_{bet}'] >= 0.6:
-                datas_result = datas.copy()
-                datas_result.append(f'{bet}')
-                bets.loc[len(bets)] = datas_result
-                print(datas_result)
+            if row['Proba_U1'] >= 0.7:
+                datas_u1 = datas.copy()
+                datas_u1.append('U1')
+                bets.loc[len(bets)] = datas_u1
+                print(datas_u1)
 
-        if row['Proba_U1'] >= 0.7:
-            datas_u1 = datas.copy()
-            datas_u1.append('U1')
-            bets.loc[len(bets)] = datas_u1
-            print(datas_u1)
+            if row['Total'] >= 2.9:
+                datas_o2 = datas.copy()
+                datas_o2.append('O2')
+                bets.loc[len(bets)] = datas_o2
+                print(datas_o2)
 
-        if row['Total'] >= 2.9:
-            datas_o2 = datas.copy()
-            datas_o2.append('O2')
-            bets.loc[len(bets)] = datas_o2
-            print(datas_o2)
+            if row['Total'] < 1.8:
+                datas_u2 = datas.copy()
+                datas_u2.append('U2')
+                bets.loc[len(bets)] = datas_u2
+                print(datas_u2)
 
-        if row['Total'] < 1.8:
-            datas_u2 = datas.copy()
-            datas_u2.append('U2')
-            bets.loc[len(bets)] = datas_u2
-            print(datas_u2)
+            if row['eGoalH'] > 1.2 and row['eGoalA'] > 1.2:
+                datas_btts = datas.copy()
+                datas_btts.append('BTTS')
+                bets.loc[len(bets)] = datas_btts
+                print(datas_btts)
 
-        if row['eGoalH'] > 1.2 and row['eGoalA'] > 1.2:
-            datas_btts = datas.copy()
-            datas_btts.append('BTTS')
-            bets.loc[len(bets)] = datas_btts
-            print(datas_btts)
+            if row['eGoalH'] < 0.9 and row['eGoalA'] < 0.9:
+                datas_nobtts = datas.copy()
+                datas_nobtts.append('NoBTTS')
+                bets.loc[len(bets)] = datas_nobtts
+                print(datas_nobtts)
 
-        if row['eGoalH'] < 0.9 and row['eGoalA'] < 0.9:
-            datas_nobtts = datas.copy()
-            datas_nobtts.append('NoBTTS')
-            bets.loc[len(bets)] = datas_nobtts
-            print(datas_nobtts)
+            if row['Proba_HD'] >= 0.8:
+                datas_hd = datas.copy()
+                datas_hd.append('HD')
+                bets.loc[len(bets)] = datas_hd
+                print(datas_hd)
 
-        if row['Proba_HD'] >= 0.8:
-            datas_hd = datas.copy()
-            datas_hd.append('HD')
-            bets.loc[len(bets)] = datas_hd
-            print(datas_hd)
+            if row['Proba_DA'] >= 0.8:
+                datas_da = datas.copy()
+                datas_da.append('DA')
+                bets.loc[len(bets)] = datas_da
+                print(datas_da)
 
-        if row['Proba_DA'] >= 0.8:
-            datas_da = datas.copy()
-            datas_da.append('DA')
-            bets.loc[len(bets)] = datas_da
-            print(datas_da)
+            for _ in ['H', 'A']:
+                if row[f'Proba_{_}'] >= 0.6 and row['Total'] >= 2.5:
+                    datas_h2 = datas.copy()
+                    datas_h2.append(f'{_}o15')
+                    bets.loc[len(bets)] = datas_h2
+                    print(datas_h2)
 
-        for _ in ['H', 'A']:
-            if row[f'Proba_{_}'] >= 0.6 and row['Total'] >= 2.5:
-                datas_h2 = datas.copy()
-                datas_h2.append(f'{_}o15')
-                bets.loc[len(bets)] = datas_h2
-                print(datas_h2)
-
-    print(bets)
+        print(bets)
 
 collection = db['Proba']
 collection.delete_many({})
 collection.insert_many(proba.to_dict(orient="records"))
 
-collection = db['betsdb']
-collection.insert_many(bets.to_dict(orient="records"))
+""" collection = db['betsdb']
+collection.insert_many(bets.to_dict(orient="records")) """
 
 proba.to_sql('proba', engine, if_exists='replace', index=False)
-bets.to_sql('betsdb', engine, if_exists='append', index=False)
+#bets.to_sql('betsdb', engine, if_exists='append', index=False)
 
 print('Proba')
 print(proba)
