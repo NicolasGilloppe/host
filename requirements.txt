@@ -3,4 +3,4 @@ streamlit_pandas
 pandas==1.5.3
 openpyxl
 bs4
-ssl
+
