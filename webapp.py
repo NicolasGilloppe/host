@@ -21,7 +21,7 @@ async def get_host(urls):
 
 async def check_url(session, url):
     try:
-        async with session.get(url, timeout=10, ssl=ssl_context) as response:
+        async with session.get(url, timeout=30, ssl=ssl_context) as response:
             content = await response.text()
             soup = BeautifulSoup(content, 'html.parser')
                
@@ -56,6 +56,9 @@ def main():
             else:
                 df.columns = ['Urls']
                 urls = df['Urls'].unique().tolist()
+                for i, url in enumerate(urls):
+                    if 'https://' not in url:
+                        urls[i] = f'https://{url}'
                
                 if platform.system() == 'Windows':
                     asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
