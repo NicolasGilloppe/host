@@ -45,7 +45,7 @@ async def check_url(session, url):
         return url, None
 
 def main():   
-    uploaded_file = st.file_uploader("Choose an XLSX file", type="xlsx")
+    uploaded_file = st.file_uploader("Import an XLSX file", type="xlsx")
    
     if uploaded_file is not None:
         try:
