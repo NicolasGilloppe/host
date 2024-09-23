@@ -27,7 +27,7 @@ async def check_url(session, url):
                
             if 'thunderbolt' in str(soup) or 'DexVille' in str(soup) or 'Dexville' in str(soup):
                 return url, 'Dexville'
-            elif "You don't have permission to access this ressource" in str(soup) or 'Proximedia' in str(soup) or 'icon-logo-online' in str(soup) or 'icon-logo-afe' in str(soup):
+            elif "You don't have permission to access this ressource" in str(soup) or 'Proximedia' in str(soup) or 'icon-logo-online' in str(soup) or 'icon-logo-afe' in str(soup) or 'BATIBOUW' in str(soup) or 'bizbook' in str(soup) or 'icon-logo-click-plus' in str(soup):
                 return url, 'Proximédia'
             elif 'toponweb' in str(soup):
                 return url, 'Toponweb'
@@ -41,7 +41,7 @@ async def check_url(session, url):
                 return url, 'Direxion Web Agency'
             else:
                 return url, 'Nothing Found'
-    except:
+    except Exception as e:
         return url, None
 
 def main():   
