@@ -152,7 +152,6 @@ def main():
                    
         except: pass
 
-    st.header("Gmaps Scrapping")
     user_input = st.text_input("Enter a search query for Google Maps:").lower().replace(' ', '+')
     if user_input:
         req = f"https://www.google.com/maps/search/{user_input}/"
