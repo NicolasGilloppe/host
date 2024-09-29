@@ -1,6 +1,5 @@
 import streamlit as st
 import pandas as pd
-import io
 import ssl
 from bs4 import BeautifulSoup
 import asyncio
@@ -14,28 +13,10 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.actions.wheel_input import ScrollOrigin
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.chrome.service import Service
-from webdriver_manager.chrome import ChromeDriverManager
-from webdriver_manager.core.os_manager import ChromeType
-
-@st.cache_resource
-def get_driver():
-    return webdriver.Chrome(
-        service=Service(
-            ChromeDriverManager(chrome_type=ChromeType.CHROMIUM).install()
-        ),
-        options=options,
-    )
-
-options = Options()
-options.add_argument("--disable-gpu")
-options.add_argument("--headless")
 
 ssl_context = ssl.create_default_context()
 ssl_context.check_hostname = False
-ssl_context.verify_mode = ssl.CERT_NONE
+ssl_context.verify_mode = ssl.CERT_NONE 
 
 async def get_host(urls):
     async with aiohttp.ClientSession() as session:
@@ -76,13 +57,10 @@ def close_all_edge_instances():
                 process.terminate()
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             pass
-            
+
 def scrappe_gmaps(url):
-    if st.session_state.driver is None:
-        st.error("Webdriver is not initialized. Cannot proceed with scraping.")
-        return pd.DataFrame()
     df = pd.DataFrame(columns=['Nom', 'Link', 'Adresse', 'Site', 'Telephone'])
-    #driver = Driver(headless=True, uc=True)
+    driver = Driver(browser='edge', headless=True)
     s = time.time()
     driver.get(url)
     time.sleep(1)
@@ -142,7 +120,6 @@ def scrappe_gmaps(url):
 
 
 def main():   
-    driver = get_driver()
     uploaded_file = st.file_uploader("Import an XLSX file", type="xlsx")
        
     if uploaded_file is not None:
@@ -174,6 +151,7 @@ def main():
                    
         except: pass
 
+    st.header("Gmaps Scrapping")
     user_input = st.text_input("Enter a search query for Google Maps:").lower().replace(' ', '+')
     if user_input:
         req = f"https://www.google.com/maps/search/{user_input}/"
