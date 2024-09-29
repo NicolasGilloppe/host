@@ -6,8 +6,6 @@ from bs4 import BeautifulSoup
 import asyncio
 import aiohttp
 import platform
-import os
-import stat
 import psutil
 import time
 from seleniumbase import Driver
@@ -16,18 +14,6 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.actions.wheel_input import ScrollOrigin
-
-def set_seleniumbase_permissions():
-    seleniumbase_dir = os.path.join(os.path.expanduser('~'), '.seleniumbase')
-    if os.path.exists(seleniumbase_dir):
-        for root, dirs, files in os.walk(seleniumbase_dir):
-            for dir in dirs:
-                os.chmod(os.path.join(root, dir), stat.S_IRWXU)
-            for file in files:
-                os.chmod(os.path.join(root, file), stat.S_IRWXU)
-        st.success("SeleniumBase permissions set successfully.")
-    else:
-        st.warning("SeleniumBase directory not found. It will be created on first run.")
 
 ssl_context = ssl.create_default_context()
 ssl_context.check_hostname = False
@@ -75,7 +61,8 @@ def close_all_edge_instances():
 
 def scrappe_gmaps(url):
     df = pd.DataFrame(columns=['Nom', 'Link', 'Adresse', 'Site', 'Telephone'])
-    driver = Driver(headless=True, uc=True)
+    #driver = Driver(headless=True, uc=True)
+    driver = st.session_state.driver
     s = time.time()
     driver.get(url)
     time.sleep(1)
@@ -207,5 +194,4 @@ async def mains(df):
   
 
 if __name__ == "__main__":
-    set_seleniumbase_permissions()
     main()
