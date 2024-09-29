@@ -59,7 +59,19 @@ def close_all_edge_instances():
         except (psutil.NoSuchProcess, psutil.AccessDenied, psutil.ZombieProcess):
             pass
 
+def initialize_driver():
+    if 'driver' not in st.session_state:
+        try:
+            st.session_state.driver = st.webdriver.webdriver.Chrome()
+            st.success("Webdriver initialized successfully.")
+        except Exception as e:
+            st.error(f"Failed to initialize webdriver: {str(e)}")
+            st.session_state.driver = None
+            
 def scrappe_gmaps(url):
+    if st.session_state.driver is None:
+        st.error("Webdriver is not initialized. Cannot proceed with scraping.")
+        return pd.DataFrame()
     df = pd.DataFrame(columns=['Nom', 'Link', 'Adresse', 'Site', 'Telephone'])
     #driver = Driver(headless=True, uc=True)
     driver = st.session_state.driver
@@ -122,6 +134,7 @@ def scrappe_gmaps(url):
 
 
 def main():   
+    initialize_driver()
     uploaded_file = st.file_uploader("Import an XLSX file", type="xlsx")
        
     if uploaded_file is not None:
