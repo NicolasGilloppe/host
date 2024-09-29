@@ -1,6 +1,6 @@
 streamlit==1.33.0
 streamlit_pandas
-pandas==2.2.2
+pandas==1.5.3
 openpyxl
 bs4
 aiohttp
