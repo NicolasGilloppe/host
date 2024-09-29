@@ -7,3 +7,4 @@ aiohttp
 seleniumbase
 selenium
 psutil
+webdriver_manager
