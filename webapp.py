@@ -8,7 +8,6 @@ import aiohttp
 import platform
 import psutil
 import time
-from selenium import webdriver
 from seleniumbase import Driver
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
@@ -62,8 +61,7 @@ def close_all_edge_instances():
 
 def scrappe_gmaps(url):
     df = pd.DataFrame(columns=['Nom', 'Link', 'Adresse', 'Site', 'Telephone'])
-    #driver = Driver(browser='chrome', headless=True)
-    driver = webdriver.Chrome()
+    driver = Driver(browser='edge', headless=True)
     s = time.time()
     driver.get(url)
     time.sleep(1)
