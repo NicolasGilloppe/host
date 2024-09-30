@@ -12,7 +12,30 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.actions.wheel_input import ScrollOrigin
+from seleniumbase import SB
+from selenium.webdriver.chrome.options import Options
 
+def get_driver():
+    chrome_options = Options()
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--disable-features=NetworkService")
+    chrome_options.add_argument("--window-size=1920x1080")
+    chrome_options.add_argument("--disable-features=VizDisplayCompositor")
+
+    return SB(
+        uc=True,  # Use undetected-chromedriver
+        headless=True,
+        agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36",
+        block_images=True,
+        do_not_track=True,
+        undetectable=True,
+        incognito=True,
+        chromium_arg="--no-sandbox",
+    )
+    
 ssl_context = ssl.create_default_context()
 ssl_context.check_hostname = False
 ssl_context.verify_mode = ssl.CERT_NONE 
@@ -51,16 +74,7 @@ async def check_url(session, url):
 def scrappe_gmaps(url):
     df = pd.DataFrame(columns=['Nom', 'Link', 'Adresse', 'Site', 'Telephone'])
     
-    # Configure SeleniumBase options
-    sb_config = {
-        "headless": True,
-        "browser": "chrome",
-        "user_data_dir": "/tmp/custom_chrome_profile",
-        "extension_dir": "/tmp/custom_chrome_extensions",
-        "no_sandbox": True,
-    }
-    
-    with Driver(**sb_config) as driver:
+    with get_driver() as driver:
         s = time.time()
         driver.get(url)
         time.sleep(1)
