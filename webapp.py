@@ -14,13 +14,6 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.actions.wheel_input import ScrollOrigin
 from selenium import webdriver
-from webdriver_manager.chrome import ChromeDriverManager
-
-def create_driver():
-    options = webdriver.ChromeOptions()
-    # Add options as needed
-    options.add_argument("--headless")  # Run headless if you don't need a GUI
-    return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
 ssl_context = ssl.create_default_context()
 ssl_context.check_hostname = False
@@ -68,8 +61,7 @@ def close_all_edge_instances():
 
 def scrappe_gmaps(url):
     df = pd.DataFrame(columns=['Nom', 'Link', 'Adresse', 'Site', 'Telephone'])
-    #driver = Driver(browser='edge', headless=False)
-    driver = create_driver()
+    driver = Driver(browser='firefox', headless=True)
     s = time.time()
     driver.get(url)
     time.sleep(1)
