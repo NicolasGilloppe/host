@@ -13,6 +13,14 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.actions.wheel_input import ScrollOrigin
+from selenium import webdriver
+from webdriver_manager.chrome import ChromeDriverManager
+
+def create_driver():
+    options = webdriver.ChromeOptions()
+    # Add options as needed
+    options.add_argument("--headless")  # Run headless if you don't need a GUI
+    return webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
 
 ssl_context = ssl.create_default_context()
 ssl_context.check_hostname = False
