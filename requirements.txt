@@ -2,11 +2,4 @@ streamlit==1.33.0
 streamlit_pandas
 pandas==1.5.3
 openpyxl
-bs4
-aiohttp
-seleniumbase==4.31.2
-selenium==4.25.0
-psutil
-webdriver-manager
-beautifulsoup4
-undetected_chromedriver
+
