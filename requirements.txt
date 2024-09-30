@@ -8,3 +8,4 @@ seleniumbase==4.31.2
 selenium==4.25.0
 psutil
 webdriver-manager
+beautifulsoup4
