@@ -18,7 +18,7 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 import os
 
-edge_driver_path = os.path.join(os.path.dirname(__file__), 'msedgedriver')
+edge_driver_path = os.path.join(os.path.dirname(__file__), 'msedgedriver.exe')
 
 def get_driver():
     edge_options = webdriver.EdgeOptions()
