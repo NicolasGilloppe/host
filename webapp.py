@@ -8,31 +8,10 @@ import platform
 import time
 from seleniumbase import Driver
 from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.edge.service import Service
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.actions.wheel_input import ScrollOrigin
-from seleniumbase import SB
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-import os
-
-edge_driver_path = os.path.join(os.path.dirname(__file__), 'msedgedriver.exe')
-
-def get_driver():
-    edge_options = webdriver.EdgeOptions()
-    edge_options.add_argument("--headless")
-    edge_options.add_argument("--no-sandbox")
-    edge_options.add_argument("--disable-dev-shm-usage")
-    edge_options.add_argument("--disable-gpu")
-    edge_options.add_argument("--disable-features=NetworkService")
-    edge_options.add_argument("--window-size=1920x1080")
-    edge_options.add_argument("--disable-features=VizDisplayCompositor")
-
-    service = Service(executable_path=edge_driver_path)
-    driver = webdriver.Edge(service=service, options=edge_options)
-    return driver
     
 ssl_context = ssl.create_default_context()
 ssl_context.check_hostname = False
@@ -72,7 +51,7 @@ async def check_url(session, url):
 def scrappe_gmaps(url):
     df = pd.DataFrame(columns=['Nom', 'Link', 'Adresse', 'Site', 'Telephone'])
     
-    driver = get_driver()
+    driver = Driver(uc=True, headless=True)
     try:
         s = time.time()
         driver.get(url)
