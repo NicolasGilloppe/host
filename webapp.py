@@ -68,7 +68,8 @@ def close_all_edge_instances():
 
 def scrappe_gmaps(url):
     df = pd.DataFrame(columns=['Nom', 'Link', 'Adresse', 'Site', 'Telephone'])
-    driver = Driver(browser='edge', headless=False)
+    #driver = Driver(browser='edge', headless=False)
+    driver = create_driver()
     s = time.time()
     driver.get(url)
     time.sleep(1)
