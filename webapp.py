@@ -12,17 +12,11 @@ def main():
             if len(df.columns) != 1:
                 st.error("The uploaded file should contain only one column.")
             else:
-                df.columns = ['Urls']
-                urls = df['Urls'].unique().tolist()
-                for i, url in enumerate(urls):
-                    if 'https://' not in url:
-                        urls[i] = f'https://{url}'
-                
-                # Prepare the data for sending to the Flask backend
-                payload = {'urls': urls}
+                df.columns = ['Site']
+                sites_list = df['Site'].tolist()
 
                 with st.spinner('Processing URLs...'):
-                    response = requests.post('http://194.164.72.188:4000/process_urls', json=payload)
+                    response = requests.post('http://194.164.72.188:4000/process_urls', json=sites_list)
                     
                     if response.status_code == 200:
                         out = pd.DataFrame(response.json())
