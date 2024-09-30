@@ -12,7 +12,14 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver import ActionChains
 from selenium.webdriver.common.actions.wheel_input import ScrollOrigin
+import undetected_chromedriver as uc
+from selenium.webdriver.chrome.options import Options
     
+chrome_options = Options()
+chrome_options.add_argument("--headless")
+chrome_options.add_argument("--no-sandbox")
+chrome_options.add_argument("--disable-dev-shm-usage")
+
 ssl_context = ssl.create_default_context()
 ssl_context.check_hostname = False
 ssl_context.verify_mode = ssl.CERT_NONE 
@@ -51,7 +58,7 @@ async def check_url(session, url):
 def scrappe_gmaps(url):
     df = pd.DataFrame(columns=['Nom', 'Link', 'Adresse', 'Site', 'Telephone'])
     
-    driver = Driver(uc=True, headless=True)
+    driver = uc.Chrome(options=chrome_options)
     try:
         s = time.time()
         driver.get(url)
