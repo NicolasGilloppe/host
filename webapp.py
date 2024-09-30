@@ -39,6 +39,7 @@ def main():
             if response.status_code == 200:
                 data = response.json()
                 df = pd.DataFrame(data)
+                df = df[['Nom', 'Link', 'Adresse', 'Telephone', 'Site', 'Host']]
                 st.dataframe(df)
                     
                 csv = df.to_csv(index=False)
