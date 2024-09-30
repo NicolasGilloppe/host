@@ -14,27 +14,23 @@ from selenium.webdriver import ActionChains
 from selenium.webdriver.common.actions.wheel_input import ScrollOrigin
 from seleniumbase import SB
 from selenium.webdriver.chrome.options import Options
+import os
+
+edge_driver_path = os.path.join(os.path.dirname(__file__), 'msedgedriver')
 
 def get_driver():
-    chrome_options = Options()
-    chrome_options.add_argument("--headless")
-    chrome_options.add_argument("--no-sandbox")
-    chrome_options.add_argument("--disable-dev-shm-usage")
-    chrome_options.add_argument("--disable-gpu")
-    chrome_options.add_argument("--disable-features=NetworkService")
-    chrome_options.add_argument("--window-size=1920x1080")
-    chrome_options.add_argument("--disable-features=VizDisplayCompositor")
+    edge_options = webdriver.EdgeOptions()
+    edge_options.add_argument("--headless")
+    edge_options.add_argument("--no-sandbox")
+    edge_options.add_argument("--disable-dev-shm-usage")
+    edge_options.add_argument("--disable-gpu")
+    edge_options.add_argument("--disable-features=NetworkService")
+    edge_options.add_argument("--window-size=1920x1080")
+    edge_options.add_argument("--disable-features=VizDisplayCompositor")
 
-    return SB(
-        uc=True,  # Use undetected-chromedriver
-        headless=True,
-        agent="Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/95.0.4638.69 Safari/537.36",
-        block_images=True,
-        do_not_track=True,
-        undetectable=True,
-        incognito=True,
-        chromium_arg="--no-sandbox",
-    )
+    service = Service(executable_path=edge_driver_path)
+    driver = webdriver.Edge(service=service, options=edge_options)
+    return driver
     
 ssl_context = ssl.create_default_context()
 ssl_context.check_hostname = False
@@ -74,7 +70,8 @@ async def check_url(session, url):
 def scrappe_gmaps(url):
     df = pd.DataFrame(columns=['Nom', 'Link', 'Adresse', 'Site', 'Telephone'])
     
-    with get_driver() as driver:
+    driver = get_driver()
+    try:
         s = time.time()
         driver.get(url)
         time.sleep(1)
@@ -128,8 +125,10 @@ def scrappe_gmaps(url):
             except:
                 pass
 
-    st.write(f"Scraping completed in {round(time.time() - s, 2)} seconds.")
-    return df
+        st.write(f"Scraping completed in {round(time.time() - s, 2)} seconds.")
+        return df
+    finally:
+        driver.quit()
 
 async def mains(df):
     urls = df['Site'].unique().tolist()
