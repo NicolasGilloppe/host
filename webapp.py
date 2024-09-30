@@ -3,8 +3,6 @@ import pandas as pd
 import requests
 
 def main():
-    st.title("Web Scraping with SeleniumBase")
-    
     uploaded_file = st.file_uploader("Import an XLSX file", type="xlsx")
        
     if uploaded_file is not None:
@@ -36,7 +34,6 @@ def main():
                         st.error(f"Error: {response.json().get('error')}")
         except Exception as e:
             st.error(f"An error occurred while processing the file: {str(e)}")
-    st.header("Google Maps Scraping")
     user_input = st.text_input("Enter a search query for Google Maps:").lower().replace(' ', '+')
     
     if user_input:
