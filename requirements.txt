@@ -9,3 +9,4 @@ selenium==4.25.0
 psutil
 webdriver-manager
 beautifulsoup4
+undetected_chromedriver
