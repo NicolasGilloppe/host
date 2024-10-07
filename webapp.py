@@ -40,7 +40,8 @@ def main():
         try:
             with st.spinner("Scraping data from Google Maps..."):
                 # Send a request to your backend
-                response = requests.post('http://194.164.72.188:4000/scrape', json={'url': req})
+                headers = {'Connection': 'keep-alive'}
+                response = requests.post('http://194.164.72.188:4000/scrape', json={'url': req}, headers=headers)
                 
                 # Check if the response is successful
                 if response.status_code == 200:
