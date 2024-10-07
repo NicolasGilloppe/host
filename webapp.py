@@ -30,25 +30,49 @@ def main():
             st.error(f"An error occurred while processing the file: {str(e)}")
     user_input = st.text_input("Enter a search query for Google Maps:").lower().replace(' ', '+')
     search_button = st.button("Search")
+    
     if user_input and search_button:
+        # Construct the request URL
         req = f"https://www.google.com/maps/search/{user_input}/"
         st.write(f"Searching: {req}")
         
-        with st.spinner("Scraping data from Google Maps..."):
-            response = requests.post('http://194.164.72.188:4000/scrape', json={'url': req})
-            if response.status_code == 200:
-                data = response.json()
-                df = pd.DataFrame(data)
-                df = df[['Nom', 'Link', 'Adresse', 'Telephone', 'Site', 'Host']]
-                st.dataframe(df)
-                    
-                csv = df.to_csv(index=False)
-                st.download_button(
-                    label="Download data as CSV",
-                    data=csv,
-                    file_name="google_maps_data.csv",
-                    mime="text/csv",
-                )
+        # Error handling block
+        try:
+            with st.spinner("Scraping data from Google Maps..."):
+                # Send a request to your backend
+                response = requests.post('http://194.164.72.188:4000/scrape', json={'url': req})
+                
+                # Check if the response is successful
+                if response.status_code == 200:
+                    data = response.json()
+
+                    # If no data is returned, handle it gracefully
+                    if not data:
+                        st.warning("No data found for the given query.")
+                    else:
+                        # Convert the data to a DataFrame and display it
+                        df = pd.DataFrame(data)
+                        df = df[['Nom', 'Link', 'Adresse', 'Telephone', 'Site', 'Host']]
+                        st.dataframe(df)
+
+                        # Allow CSV download
+                        csv = df.to_csv(index=False)
+                        st.download_button(
+                            label="Download data as CSV",
+                            data=csv,
+                            file_name="google_maps_data.csv",
+                            mime="text/csv",
+                        )
+                else:
+                    # Display error message for unsuccessful status codes
+                    st.error(f"Error: Received status code {response.status_code} from the server.")
+        
+        except requests.exceptions.RequestException as e:
+            # Catch any request-related errors and display them
+            st.error(f"Request failed: {e}")
+        except Exception as e:
+            # Catch any other unforeseen errors
+            st.error(f"An error occurred: {e}")
         
 
 if __name__ == "__main__":
