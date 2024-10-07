@@ -29,8 +29,8 @@ def main():
         except Exception as e:
             st.error(f"An error occurred while processing the file: {str(e)}")
     user_input = st.text_input("Enter a search query for Google Maps:").lower().replace(' ', '+')
-    
-    if user_input:
+    search_button = st.button("Search")
+    if user_input and shearch_button:
         req = f"https://www.google.com/maps/search/{user_input}/"
         st.write(f"Searching: {req}")
         
