@@ -43,7 +43,7 @@ def main():
                 # Send a request to your backend
                 headers = {'Connection': 'keep-alive'}
                 time.sleep(0.01)
-                response = requests.post('http://194.164.72.188:4000/scrape', json={'url': req}, headers=header, timeout=1200)
+                response = requests.post('http://194.164.72.188:4000/scrape', json={'url': req}, headers=headers, timeout=1200)
                 
                 # Check if the response is successful
                 if response.status_code == 200:
